@@ -34,13 +34,17 @@ class DQN:
 			inputs[i:i + 1] = state_b #状態を渡す(転倒時は0)
 			target = reward_b #報酬を渡す(常に1)
 
-			if calc_reward:#オールゼロ(シミュレーション終了時は回避)
+			if calc_reward :#オールゼロ(シミュレーション終了時は回避)
 				# 価値計算（DDQNにも対応できるように、行動決定のQネットワークと価値観数のQネットワークは分離）
-				target = reward_b + self.gamma * np.amax(self.model.predict(next_state_b)[0])
+				target_act = self.model.predict(next_state_b) 
+				target = reward_b + self.gamma * np.max(target_act)
 				
 			targets[i] = self.model.predict(state_b)    # Qネットワークの出力
-			targets[i][action_b] = target               # 教師信号
+			targets[i][action_b] = target              # 教師信号
+			targets = np.clip(targets, -1, 2000)	#2000step以上耐える必要はないため
 		self.model.fit(inputs, targets, epochs=1, verbose=0)  # epochsは訓練データの反復回数、verbose=0は表示なしの設定
+
+		#print(targets)
 			
  
 class Memory:
@@ -98,8 +102,11 @@ if __name__ == '__main__':
 			next_state = pend.get_state()#ステータスの取得
 			trial_reward += reward #1シミュレーションにおける報酬
 
-			if j >= goal_reward or not(pend.calc_reward()):#終了判定
-				next_state = np.zeros(state.shape)#終了した場合初期ステータス[0,0,0,0]を渡す?報酬系の代わりの処理
+			if pend.calc_reward():#終了判定
+				reward = 1.
+			else :
+				reward = -1
+				#next_state = np.zeros(state.shape)#終了した場合初期ステータス[0,0,0,0]を渡す?報酬系の代わりの処理
 	
 			memory.add((state, action, reward, next_state, pend.calc_reward()))#メモリに必要事項を渡す
 			state = next_state #状態の更新
