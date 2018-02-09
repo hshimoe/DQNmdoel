@@ -11,8 +11,8 @@ from keras.optimizers import Adam
 from keras.utils import plot_model
 from collections import deque
 from keras import backend as K
-
-
+#ver 1.0
+#参考URL:http://neuro-educator.com/rl2/
 class DQN:        
 	batch_size = 32
 	gamma = 0.99
