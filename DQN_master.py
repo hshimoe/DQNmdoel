@@ -30,11 +30,11 @@ class DQN:
 		targets = np.zeros((self.batch_size, 2))#出力データ(動作)
 		mini_batch = memory.sample(self.batch_size) #ミニバッチサイズ
  
-		for i, (state_b, action_b, reward_b, next_state_b) in enumerate(mini_batch):
+		for i, (state_b, action_b, reward_b, next_state_b, calc_reward) in enumerate(mini_batch):
 			inputs[i:i + 1] = state_b #状態を渡す(転倒時は0)
 			target = reward_b #報酬を渡す(常に1)
 
-			if not (next_state_b == np.zeros(state_b.shape)).all(axis=1):#オールゼロ(シミュレーション終了時は回避)
+			if calc_reward:#オールゼロ(シミュレーション終了時は回避)
 				# 価値計算（DDQNにも対応できるように、行動決定のQネットワークと価値観数のQネットワークは分離）
 				target = reward_b + self.gamma * np.amax(self.model.predict(next_state_b)[0])
 				
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 			if j >= goal_reward or not(pend.calc_reward()):#終了判定
 				next_state = np.zeros(state.shape)#終了した場合初期ステータス[0,0,0,0]を渡す?報酬系の代わりの処理
 	
-			memory.add((state, action, reward, next_state))#メモリに必要事項を渡す
+			memory.add((state, action, reward, next_state, pend.calc_reward()))#メモリに必要事項を渡す
 			state = next_state #状態の更新
 
 			if (memory.len() > 32) : #32以上になったら学習開始(ミニバッチのサイズの問題)
